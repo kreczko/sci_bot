@@ -60,3 +60,4 @@ target/
 
 # pyenv python configuration file
 .python-version
+private_config.yaml
