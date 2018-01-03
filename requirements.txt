@@ -1,2 +1,4 @@
 python-gitlab
 pyyaml
+confluent-kafka
+python-dotenv
