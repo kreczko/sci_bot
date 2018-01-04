@@ -1,6 +1,6 @@
 import os
 import pickle
-
+from .logger import log
 
 def cached(cachefile, expirationTime=60 * 60 * 24):
     """
@@ -10,11 +10,11 @@ def cached(cachefile, expirationTime=60 * 60 * 24):
     """
     def decorator(fn):
         def wrapped(*args, **kwargs):
-
+            # TODO: cache is only valid for the same args and kwargs
             if os.path.exists(cachefile):
                 if os.path.getmtime(cachefile) > expirationTime:
                     with open(cachefile, 'rb') as cachehandle:
-                        print(
+                        log.info(
                             "using cached result from '{0}'".format(cachefile))
                         return pickle.load(cachehandle)
 
@@ -23,7 +23,7 @@ def cached(cachefile, expirationTime=60 * 60 * 24):
 
             # write to cache file
             with open(cachefile, 'wb') as cachehandle:
-                print("saving result to cache '{0}'".format(cachefile))
+                log.info("saving result to cache '{0}'".format(cachefile))
                 pickle.dump(res, cachehandle)
 
             return res
