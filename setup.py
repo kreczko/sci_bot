@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """The setup script."""
-
 from setuptools import setup, find_packages
+
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -11,9 +11,12 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [
+install_reqs = [
+    'python-gitlab',
+    'pyyaml',
+    'confluent-kafka',
+    'python-dotenv',
     'Click>=6.0',
-    # TODO: put package requirements here
 ]
 
 setup_requirements = [
@@ -41,7 +44,7 @@ setup(
         ]
     },
     include_package_data=True,
-    install_requires=requirements,
+    install_requires=install_reqs,
     license="Apache Software License 2.0",
     zip_safe=False,
     keywords='sci_bot',
