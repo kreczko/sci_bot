@@ -1,7 +1,8 @@
+"""Logging configuration for ci_bot package."""
 import os
 import logging
 
-debug = os.environ.get("DEBUG", False)
+debug = os.environ.get('DEBUG', False)
 
 log = logging.getLogger('ci_bot')
 if debug:
