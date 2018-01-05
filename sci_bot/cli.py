@@ -6,10 +6,11 @@ import yaml
 import os
 import pickle
 
-from . import gitlab as gl
+from . import backend_gitlab as gl
 from .logger import log
 from dotenv import load_dotenv
 from .ci_bot import listen_kafka
+
 
 @click.command()
 @click.option('-c', '--config', type=click.File(), default='private_config.yaml')
@@ -47,11 +48,14 @@ def main(config, ignore_cache, env_file, args=None):
 def read_config(config_file):
     config = yaml.load(config_file)
     log.debug(config)
-    # TODO:some checks
+    # TODO: add some checks
+    # e.g. does the API token work?
     return config
+
 
 def listen(topics):
     pass
+
 
 if __name__ == "__main__":
     main()
