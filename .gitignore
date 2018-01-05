@@ -63,3 +63,4 @@ target/
 private_config.yaml
 
 .env
+data/*.json
