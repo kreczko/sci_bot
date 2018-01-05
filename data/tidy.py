@@ -7,7 +7,7 @@ def tidy_file(file_name):
     with open(file_name) as f:
         content = json.load(f)
     with open(file_name, 'w') as f:
-        json.dump(content, f, indent=4)
+        json.dump(content, f, indent=2)
 
 path = join(dirname(__file__), '*.json')
 files = glob(path)
