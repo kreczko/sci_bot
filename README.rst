@@ -9,8 +9,8 @@ sci_bot - Science Continuous Integration bot
 .. image:: https://img.shields.io/travis/kreczko/sci_bot.svg
         :target: https://travis-ci.org/kreczko/sci_bot
 
-.. image:: https://readthedocs.org/projects/lz-ci-bot/badge/?version=latest
-        :target: https://lz-ci-bot.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/ci-bot/badge/?version=latest
+        :target: https://ci-bot.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
 .. image:: https://pyup.io/repos/github/kreczko/sci_bot/shield.svg
@@ -28,14 +28,19 @@ A bot for all the Science CI needs
 Features
 --------
 
-* TODO
+* Easy setup of pipelines across multiple projects via configuration repository (TODO)
+* Metric reporting and tracking (TODO)
+* set of commands for manual steering (TODO)
+* release validation on tagging (TODO)
+* simple web frontend to forward gitlab hooks to a Kafka service (currently outside this project: kreczko/webhook_forwarder)
 
 Docker
 --------
-```bash
-docker-compose up -d
-docker exec -ti scibot_box_1 cdw
-```
+To start the ci-bot simply run::
+
+    docker-compose up -d
+    docker exec -ti scibot_box_1 cdw
+
 
 
 Credits

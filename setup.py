@@ -32,7 +32,7 @@ test_requirements = [
 setup(
     name='sci_bot',
     version='0.0.1',
-    description="A bot for all the LZ CI needs",
+    description="A bot for all the CI needs",
     long_description=readme + '\n\n' + history,
     author="Luke Kreczko",
     author_email='kreczko@cern.ch',
