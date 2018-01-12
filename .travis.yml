@@ -8,8 +8,16 @@ python:
   - 3.4
   - 2.7
 
-before_install:
-  - sudo ./travis-install-librdkafka.sh v0.11.1 $HOME
+# before_install:
+#   - sudo ./travis-install-librdkafka.sh v0.11.1 $HOME
+
+addons:
+  apt:
+    sources:
+      - sourceline: "deb [arch=amd64] http://packages.confluent.io/deb/3.3 stable main"
+    packages:
+      - librdkafka1
+      - librdkafka-dev
 
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: pip install -U tox-travis
@@ -29,3 +37,6 @@ deploy:
     tags: true
     repo: kreczko/sci_bot
     python: 3.5
+
+cache:
+  apt: true
