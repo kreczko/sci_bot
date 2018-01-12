@@ -5,7 +5,7 @@ services:
     build:
       dockerfile: docker/Dockerfile
       context: .
-    image: kreczko/ci_bot
+    image: kreczko/sci_bot
     environment:
       DISPLAY: ${DISPLAY}
       TERM: ${TERM}

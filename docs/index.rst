@@ -1,4 +1,4 @@
-Welcome to ci_bot's documentation!
+Welcome to sci_bot's documentation!
 ======================================
 
 Contents:

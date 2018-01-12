@@ -27,24 +27,24 @@ test_requirements = [
 ]
 
 setup(
-    name='ci_bot',
+    name='sci_bot',
     version='0.0.1',
     description="A bot for all the LZ CI needs",
     long_description=readme + '\n\n' + history,
     author="Luke Kreczko",
     author_email='kreczko@cern.ch',
-    url='https://github.com/kreczko/ci_bot',
-    packages=find_packages(include=['ci_bot']),
+    url='https://github.com/kreczko/sci_bot',
+    packages=find_packages(include=['sci_bot']),
     entry_points={
         'console_scripts': [
-            'ci_bot=ci_bot.cli:main'
+            'sci_bot=sci_bot.cli:main'
         ]
     },
     include_package_data=True,
     install_requires=requirements,
     license="Apache Software License 2.0",
     zip_safe=False,
-    keywords='ci_bot',
+    keywords='sci_bot',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',

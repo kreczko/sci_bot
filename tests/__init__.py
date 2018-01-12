@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-"""Unit test package for ci_bot."""
+"""Unit test package for sci_bot."""

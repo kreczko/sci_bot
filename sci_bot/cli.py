@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Console script for ci_bot."""
+"""Console script for sci_bot."""
 
 import click
 import yaml
@@ -37,7 +37,7 @@ def projects_to_cachefile(projects, cachefile):
 @click.option('-c', '--config', type=click.File(), default='private_config.yaml')
 @click.option('-i', '--ignore-cache', default=False)
 def main(config, ignore_cache, args=None):
-    """Console script for ci_bot."""
+    """Console script for sci_bot."""
     config = yaml.load(config)
     print(config)
     connection = gl.connect(config['repo'], config['API_TOKEN'])

@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `ci_bot` package."""
+"""Tests for `sci_bot` package."""
 
 import pytest
 
 from click.testing import CliRunner
 
-from ci_bot import ci_bot
-from ci_bot import cli
+from sci_bot import sci_bot
+from sci_bot import cli
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ def test_command_line_interface():
     runner = CliRunner()
     result = runner.invoke(cli.main)
     assert result.exit_code == 0
-    assert 'ci_bot.cli.main' in result.output
+    assert 'sci_bot.cli.main' in result.output
     help_result = runner.invoke(cli.main, ['--help'])
     assert help_result.exit_code == 0
     assert '--help  Show this message and exit.' in help_result.output

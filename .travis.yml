@@ -25,5 +25,5 @@ deploy:
     secure: PLEASE_REPLACE_ME
   on:
     tags: true
-    repo: kreczko/lz_ci_bot
+    repo: kreczko/sci_bot
     python: 2.7

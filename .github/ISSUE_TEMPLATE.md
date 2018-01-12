@@ -1,4 +1,4 @@
-* lz_ci_bot version:
+* sci_bot version:
 * Python version:
 * Operating System:
 

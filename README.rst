@@ -1,28 +1,28 @@
 =========
-ci_bot
+sci_bot - Science Continuous Integration bot
 =========
 
 
-.. image:: https://img.shields.io/pypi/v/ci_bot.svg
-        :target: https://pypi.python.org/pypi/ci_bot
+.. image:: https://img.shields.io/pypi/v/sci_bot.svg
+        :target: https://pypi.python.org/pypi/sci_bot
 
-.. image:: https://img.shields.io/travis/kreczko/ci_bot.svg
-        :target: https://travis-ci.org/kreczko/ci_bot
+.. image:: https://img.shields.io/travis/kreczko/sci_bot.svg
+        :target: https://travis-ci.org/kreczko/sci_bot
 
 .. image:: https://readthedocs.org/projects/lz-ci-bot/badge/?version=latest
         :target: https://lz-ci-bot.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-.. image:: https://pyup.io/repos/github/kreczko/ci_bot/shield.svg
-     :target: https://pyup.io/repos/github/kreczko/ci_bot/
+.. image:: https://pyup.io/repos/github/kreczko/sci_bot/shield.svg
+     :target: https://pyup.io/repos/github/kreczko/sci_bot/
      :alt: Updates
 
 
-A bot for all the LZ CI needs
+A bot for all the Science CI needs
 
 
 * Free software: Apache Software License 2.0
-* Documentation: https://lz-ci-bot.readthedocs.io.
+* Documentation: https://sci-bot.readthedocs.io.
 
 
 Features
@@ -34,7 +34,7 @@ Docker
 --------
 ```bash
 docker-compose up -d
-docker exec -ti cibot_box_1 cdw
+docker exec -ti scibot_box_1 cdw
 ```
 
 

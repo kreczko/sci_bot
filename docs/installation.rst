@@ -8,13 +8,13 @@ Installation
 Stable release
 --------------
 
-To install ci_bot, run this command in your terminal:
+To install sci_bot, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install ci_bot
+    $ pip install sci_bot
 
-This is the preferred method to install ci_bot, as it will always install the most recent stable release. 
+This is the preferred method to install sci_bot, as it will always install the most recent stable release.
 
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
@@ -26,19 +26,19 @@ you through the process.
 From sources
 ------------
 
-The sources for ci_bot can be downloaded from the `Github repo`_.
+The sources for sci_bot can be downloaded from the `Github repo`_.
 
 You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/kreczko/ci_bot
+    $ git clone git://github.com/kreczko/sci_bot
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl  -OL https://github.com/kreczko/ci_bot/tarball/master
+    $ curl  -OL https://github.com/kreczko/sci_bot/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -47,5 +47,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/kreczko/ci_bot
-.. _tarball: https://github.com/kreczko/ci_bot/tarball/master
+.. _Github repo: https://github.com/kreczko/sci_bot
+.. _tarball: https://github.com/kreczko/sci_bot/tarball/master
