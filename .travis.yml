@@ -8,8 +8,12 @@ python:
   - 3.4
   - 2.7
 
+# env:
+#   - LIBRDKAFKA_VERSION=v0.11.0
+#
 # before_install:
-#   - sudo ./travis-install-librdkafka.sh v0.11.1 $HOME
+#   - sudo ./travis-install-librdkafka.sh ${LIBRDKAFKA_VERSION} $HOME
+#   - sudo ldconfig -vvv
 
 addons:
   apt:
