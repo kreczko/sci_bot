@@ -9,7 +9,7 @@ import pickle
 from . import backend_gitlab as gl
 from .logger import log
 from dotenv import load_dotenv
-from .ci_bot import listen_kafka
+from .sci_bot import listen_kafka
 
 
 @click.command()
