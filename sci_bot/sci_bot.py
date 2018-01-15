@@ -1,4 +1,6 @@
+import os
 from os.path import dirname, join
+import git
 import confluent_kafka
 import json
 
@@ -124,5 +126,18 @@ def listen_kafka(config, timeout=5.0):
         # Close down consumer to commit final offsets.
         consumer.close()
 
-def get_config_repo(config):
-    repo = config['configuration_repository']
+def get_config_repo(repo, auth_token):
+    # repo = config['configuration_repository']
+    to_path = join(dirname(__file__), '..', 'external', 'configrepo')
+    # insert auth_token
+    token = "oath2:{}".format(auth_token)
+    repo = repo.replace('https://', 'https://{}@'.format(token))
+    if not os.path.exists(to_path):
+        log.info('Cloning config repo')
+        git.Repo.clone_from(repo, to_path, branch='master')
+    else:
+        # TODO: check if valid repo
+        log.info('Config repo already present, updating')
+        repo = git.Repo(to_path)
+        repo.remotes.origin.fetch()
+        repo.remotes.origin.pull()

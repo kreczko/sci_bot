@@ -9,7 +9,7 @@ import pickle
 from . import backend_gitlab as gl
 from .logger import log
 from dotenv import load_dotenv
-from .sci_bot import listen_kafka
+from .sci_bot import listen_kafka, get_config_repo
 
 
 @click.command()
@@ -42,7 +42,8 @@ def main(config, ignore_cache, env_file, args=None):
         mrs = gl.get_merge_requests(project)
         log.debug('N MRs: %d', len(mrs))
 
-    listen_kafka(config)
+    # listen_kafka(config)
+    test(config)
 
 
 def read_config(config_file):
@@ -53,8 +54,10 @@ def read_config(config_file):
     return config
 
 
-def listen(topics):
-    pass
+def test(config):
+    gitlab_token = os.environ['GIT_ACCESS_TOKEN']
+    config_repo = os.environ['SCI_BOT_CONFIG_REPO']
+    get_config_repo(config_repo, gitlab_token)
 
 
 if __name__ == "__main__":

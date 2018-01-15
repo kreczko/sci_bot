@@ -78,3 +78,7 @@ def add_label(issue_id):
 
 def remove_label(issue_id):
     pass
+
+def trigger_build(project, params):
+    project.trigger_build('master', trigger_token,
+                      {'extra_var1': 'foo', 'extra_var2': 'bar'})
