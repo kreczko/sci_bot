@@ -17,6 +17,7 @@ install_reqs = [
     'confluent-kafka',
     'python-dotenv',
     'Click>=6.0',
+    'gitpython>=2.1.8',
 ]
 
 setup_requirements = [
