@@ -65,3 +65,4 @@ private_config.yaml
 .env
 data/*.json
 .DS_Store
+external
