@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  box:
+  sci_bot:
     build:
       dockerfile: docker/Dockerfile
       context: .

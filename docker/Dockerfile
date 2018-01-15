@@ -28,9 +28,6 @@ RUN apk add --no-cache \
             librdkafka=${LIBRDKAFKA_VERSION} \
             --repository http://nl.alpinelinux.org/alpine/edge/community
 
-# Install dependencies
-ADD requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir  -r /tmp/requirements.txt
 
 # ci bot bits
 COPY docker/cdw /usr/local/bin/cdw
@@ -39,6 +36,8 @@ COPY docker/bashrc /root/.bashrc
 # Add our code
 ADD . /app/user
 WORKDIR /app/user
+# install app as development image
+RUN python setup.py develop
 
 # Run the image as a non-root user
 RUN adduser -D myuser
