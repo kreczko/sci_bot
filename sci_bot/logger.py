@@ -4,7 +4,7 @@ import logging
 
 debug = os.environ.get('DEBUG', False)
 
-log = logging.getLogger('ci_bot')
+log = logging.getLogger('sci_bot')
 if debug:
     log.setLevel(logging.DEBUG)
 
