@@ -6,19 +6,40 @@ services:
       dockerfile: docker/Dockerfile
       context: .
     image: kreczko/sci_bot
+    domainname: foo.bar
+    hostname: fast
+    network_mode: "host"
+    working_dir: /app/user
+    entrypoint:
+      - /usr/local/bin/sci_bot
+      - --listen
+
+  webhook_forwarder:
+    build:
+      dockerfile: docker/Dockerfile
+      context: .
+    image: kreczko/sci_bot
+    domainname: foo.bar
+    hostname: fast
+    network_mode: "host"
+    working_dir: /app/user
+    entrypoint:
+      - /usr/local/bin/sci_bot
+      - --forward
+
+  dev:
+    build:
+      dockerfile: docker/Dockerfile
+      context: .
+    image: kreczko/sci_bot
     environment:
-      DISPLAY: ${DISPLAY}
-      TERM: ${TERM}
-    tty: true
-    stdin_open: true
+      DEBUG: 1
     domainname: foo.bar
     hostname: fast
     network_mode: "host"
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - .:/code
-    working_dir: /code
+      - .:/app/user
+    working_dir: /app/user
     entrypoint:
-      - tail
-      - -f
-      - "/dev/null"
+      - /usr/local/bin/sci_bot
+      - --listen

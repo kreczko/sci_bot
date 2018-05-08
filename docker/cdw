@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-cd /code
-stty rows 256 cols 256
-bash

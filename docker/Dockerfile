@@ -41,6 +41,5 @@ RUN python setup.py develop
 
 # Run the image as a non-root user
 RUN adduser -D myuser
+RUN chown -R myuser /app/user
 USER myuser
-
-CMD ['/usr/local/bin/cdw']
