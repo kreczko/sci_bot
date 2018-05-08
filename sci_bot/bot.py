@@ -3,11 +3,50 @@ from os.path import dirname, join
 import git
 import confluent_kafka
 import json
+import yaml
 
-from .kafka_helper import get_kafka_consumer, get_topics
+from .kafka_helper import get_kafka_consumer
 from .logger import log
 
 from . import backend_gitlab as gl
+
+
+def parse_config(config_file):
+    config = yaml.load(config_file)
+    log.debug(config)
+    # TODO: add some checks
+    # e.g. does the API token work?
+    return config
+
+
+def listen(config, timeout=5.0):
+    config = parse_config(config)
+    topics = config['kafka_topics']
+    consumer = get_kafka_consumer()
+    tmp_dir = config['tmp_dir']
+    try:
+        consumer.subscribe(topics)
+
+        while True:
+            msg = consumer.poll(timeout=timeout)
+            if msg is None:
+                log.debug("No messages found.")
+                continue
+            if msg.error():
+                process_error_msg(msg)
+            else:
+                process_msg(msg, tmp_dir)
+                consumer.commit(async=False)
+    except KeyboardInterrupt:
+        log.info('%% Aborted by user\n')
+    finally:
+        # Close down consumer to commit final offsets.
+        consumer.close()
+
+
+def forward():
+    config = parse_config(config)
+    pass
 
 
 def process_error_msg(msg):
@@ -19,10 +58,10 @@ def process_error_msg(msg):
         raise confluent_kafka.KafkaException(msg.error())
 
 
-def process_msg(msg):
+def process_msg(msg, tmp_dir='/tmp'):
     value = msg.value()
     value = json.loads(value)
-    store_msg_value(value)
+    store_msg_value(value, tmp_dir)
 
     if gl.is_build_event(value):
         process_build_event(value)
@@ -45,6 +84,7 @@ def process_msg(msg):
 
 
 def process_build_event(event):
+    log.debug('Got build event')
     # TODO: when a build finishes, download metrics and output files
     # files need to be specified in config repo
     # if it is a one-off build, check what is next in line
@@ -52,11 +92,13 @@ def process_build_event(event):
 
 
 def process_ci_event(event):
+    log.debug('Got CI event')
     # TODO: when a pipeline/workflow finishes, create report
     pass
 
 
 def process_issue_event(event):
+    log.debug('Got issues event')
     # not interesting at the moment, but might in the future
     # TODO: notify people responsible for changed files/new files in specific
     # folders
@@ -64,6 +106,7 @@ def process_issue_event(event):
 
 
 def process_merge_request_event(event):
+    log.debug('Got merge request event')
     # TODO:
     # 1. notify people responsible for changed files/new files in specific
     # folders & add labels (e.g. "not-tested", 'not-validated')
@@ -76,6 +119,7 @@ def process_merge_request_event(event):
 
 
 def process_note_event(event):
+    log.debug('Got note event')
     # TODO: these might include bot commands!
     # process command
     # acknowledge a known command
@@ -84,51 +128,32 @@ def process_note_event(event):
 
 
 def process_push_event(event):
+    log.debug('Got push event')
     # not interesting at the moment, but might be used later
     # TODO: to be seen
     pass
 
 
 def process_tag_event(event):
+    log.debug('Got tag event')
     # TODO: start release validation and deploy?
     pass
 
 
 def process_unknown_event(event):
+    log.debug('Got unknown event')
     pass
 
 
-def store_msg_value(msg_value):
-    path = join(dirname(__file__), '..', 'data', 'ci_bot_msg_random_hash.json')
+def store_msg_value(msg_value, tmp_dir):
+    path = join(tmp_dir, 'data', 'ci_bot_msg_random_hash.json')
     with open(path, 'w') as f:
         json.dump(msg_value, f, indent=2)
 
 
-def listen_kafka(config, timeout=5.0):
-    topics = get_topics(config)
-    consumer = get_kafka_consumer()
-    try:
-        consumer.subscribe(topics)
-
-        while True:
-            msg = consumer.poll(timeout=timeout)
-            if msg is None:
-                log.debug("No messages found.")
-                continue
-            if msg.error():
-                process_error_msg(msg)
-            else:
-                process_msg(msg)
-                consumer.commit(async=False)
-    except KeyboardInterrupt:
-        log.info('%% Aborted by user\n')
-    finally:
-        # Close down consumer to commit final offsets.
-        consumer.close()
-
 def get_config_repo(repo, auth_token):
     # repo = config['configuration_repository']
-    to_path = join(dirname(__file__), '..', 'external', 'configrepo')
+    to_path = join('/tmp', 'sci_bot', 'external', 'configrepo')
     # insert auth_token
     token = "oath2:{}".format(auth_token)
     repo = repo.replace('https://', 'https://{}@'.format(token))
@@ -141,3 +166,30 @@ def get_config_repo(repo, auth_token):
         repo = git.Repo(to_path)
         repo.remotes.origin.fetch()
         repo.remotes.origin.pull()
+
+
+def test_gitlab(config):
+    connection = gl.connect(config['repo'], config['API_TOKEN'])
+
+    remote_projects = gl.get_list_of_projects(connection)
+    projects = config['projects']
+    found_projects = []
+
+    log.debug('Found %d remote projects', len(remote_projects))
+    for p in remote_projects:
+        # print(p.path_with_namespace)
+        for project in projects:
+            if not p.path_with_namespace == project:
+                continue
+            found_projects.append(p)
+
+    for project in found_projects:
+        log.debug('Found %s', project.path_with_namespace)
+        mrs = gl.get_merge_requests(project)
+        log.debug('N MRs: %d', len(mrs))
+
+
+def clone_config_repo(config):
+    gitlab_token = os.environ['GIT_ACCESS_TOKEN']
+    config_repo = os.environ['SCI_BOT_CONFIG_REPO']
+    get_config_repo(config_repo, gitlab_token)
