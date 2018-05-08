@@ -34,9 +34,3 @@ def get_kafka_consumer():
     except Exception as e:
         print('Could not create kafka consumer', e, file=sys.stderr)
     return consumer
-
-def get_topics(config):
-    prefix = os.environ['KAFKA_TOPIC_PREFIX']
-    topics = config['kafka_topics']
-    topics = [prefix + t for t in topics]
-    return topics
