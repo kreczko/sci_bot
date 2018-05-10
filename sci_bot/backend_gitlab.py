@@ -39,11 +39,20 @@ def remove_label_from_merge_request(label, merge_request):
 def __is_object_kind__(msg, kind):
     return 'object_kind' in msg and msg['object_kind'] == kind
 
+
 def get_event_type(msg):
     if 'object_kind' in msg:
         return msg['object_kind']
     else:
         return 'unknown'
+
+
+def contains_mention(msg, mention):
+    if 'object_attributes' not in msg:
+        return False
+    attr = msg['object_attributes']
+    note = attr['note']
+    return mention in note
 
 
 def is_build_event(msg):
@@ -61,6 +70,7 @@ def is_issue_event(msg):
 def is_merge_request_event(msg):
     return __is_object_kind__(msg, 'merge_request')
 
+
 def is_note_event(msg):
     return __is_object_kind__(msg, 'note')
 
@@ -76,15 +86,19 @@ def is_tag_event(msg):
 def get_note_content(msg):
     return msg['object_attributes']['note']
 
+
 def get_username(msg):
     return msg['user']['username']
+
 
 def add_label(issue_id):
     pass
 
+
 def remove_label(issue_id):
     pass
 
+
 def trigger_build(project, params):
     project.trigger_build('master', trigger_token,
-                      {'extra_var1': 'foo', 'extra_var2': 'bar'})
+                          {'extra_var1': 'foo', 'extra_var2': 'bar'})
