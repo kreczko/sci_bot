@@ -61,7 +61,7 @@ def process_error_msg(msg):
 def process_msg(msg, tmp_dir='/tmp'):
     value = msg.value()
     value = json.loads(value)
-    store_msg_value(value, tmp_dir)
+    store_msg(value, tmp_dir)
 
     if gl.is_build_event(value):
         process_build_event(value)
@@ -145,10 +145,11 @@ def process_unknown_event(event):
     pass
 
 
-def store_msg_value(msg_value, tmp_dir):
-    path = join(tmp_dir, 'data', 'ci_bot_msg_random_hash.json')
+def store_msg(msg, tmp_dir):
+    event_type = gl.get_event_type(msg)
+    path = join(tmp_dir, 'data', f'ci_bot_msg_{event_type}_random_hash.json')
     with open(path, 'w') as f:
-        json.dump(msg_value, f, indent=2)
+        json.dump(msg, f, indent=2)
 
 
 def get_config_repo(repo, auth_token):
