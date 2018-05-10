@@ -39,6 +39,12 @@ def remove_label_from_merge_request(label, merge_request):
 def __is_object_kind__(msg, kind):
     return 'object_kind' in msg and msg['object_kind'] == kind
 
+def get_event_type(msg):
+    if 'object_kind' in msg:
+        return msg['object_kind']
+    else:
+        return 'unknown'
+
 
 def is_build_event(msg):
     return __is_object_kind__(msg, 'build')
