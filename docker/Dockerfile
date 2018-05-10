@@ -30,7 +30,6 @@ RUN apk add --no-cache \
 
 
 # ci bot bits
-COPY docker/cdw /usr/local/bin/cdw
 COPY docker/bashrc /root/.bashrc
 
 # Add our code
@@ -43,3 +42,4 @@ RUN python setup.py develop
 RUN adduser -D myuser
 RUN chown -R myuser /app/user
 USER myuser
+COPY docker/bashrc /home/myuser/.bashrc
