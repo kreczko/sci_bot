@@ -1,8 +1,67 @@
 """Wrapper for python-gitlab."""
 import gitlab
 import os
+import json
 
 from .helpers import cached
+from .logger import log
+from .backend import EventType
+
+GITLAB_EVENT_TYPE_MAP = dict(
+    build=EventType.BUILD,
+    pipeline=EventType.CI,
+    issue=EventType.ISSUE,
+    merge_request=EventType.MERGE_REQUEST,
+    note=EventType.NOTE,
+    push=EventType.PUSH,
+    tag_push=EventType.TAG,
+    unknown=EventType.UNKNOWN,
+)
+
+
+class Gitlab(object):
+    def __init__(self, repo, auth_token):
+        self.repo = repo
+        self.auth_token = auth_token
+        self.connection = __connect(repo, auth_token)
+
+    def reply_to_issue(self, issue, msg):
+        try:
+            issue.notes.create(dict(
+                body=msg,
+            ))
+            issue.save()
+        except Exception as e:
+            log.error('Unable to reply to issue {}: {}'.format(
+                issue.get_id(), e))
+
+
+class Event(object):
+    def __init__(self, content):
+        self._content = content
+
+    @property
+    def type(self):
+        internal_type = self._get_type()
+        if internal_type in GITLAB_EVENT_TYPE_MAP:
+            return GITLAB_EVENT_TYPE_MAP[internal_type]
+        else:
+            return EventType.UNKNOWN
+
+    def _get_type(self):
+        if 'object_kind' in self._content:
+            return self._content['object_kind']
+        else:
+            return 'unknown'
+
+    def to_json(self, output_file):
+        with open(output_file, 'w') as f:
+            json.dump(self._content, f, indent=2)
+
+    @staticmethod
+    def from_string(input_string):
+        content = json.loads(input_string)
+        return Event(content)
 
 
 @cached('/tmp/projects.pkl')
@@ -10,7 +69,7 @@ def get_list_of_projects(connection, get_all=True):
     return connection.projects.list(all=get_all)
 
 
-def connect(repo, auth_token):
+def __connect(repo, auth_token):
     connection = gitlab.Gitlab(repo, auth_token, api_version=4)
     connection.auth()
     return connection
@@ -41,13 +100,6 @@ def __is_object_kind__(msg, kind):
     return 'object_kind' in msg and msg['object_kind'] == kind
 
 
-def get_event_type(msg):
-    if 'object_kind' in msg:
-        return msg['object_kind']
-    else:
-        return 'unknown'
-
-
 def contains_mention(msg, mention):
     if 'object_attributes' not in msg:
         return False
@@ -55,11 +107,12 @@ def contains_mention(msg, mention):
     note = attr['note']
     return '@' + mention in note
 
+
 def reply_to(event, msg):
     gitlab_token = os.environ['GIT_ACCESS_TOKEN']
 
     git_ssh_url = event['project']['git_ssh_url']
-    url=url[url.find('@')+1:url.find(':')]
+    url = url[url.find('@') + 1:url.find(':')]
     url = 'https://{}'.format(url)
 
     c = connect(url, gitlab_token)
@@ -76,34 +129,6 @@ def reply_to(event, msg):
         body=msg,
     ))
     issue.save()
-
-
-def is_build_event(msg):
-    return __is_object_kind__(msg, 'build')
-
-
-def is_ci_event(msg):
-    return __is_object_kind__(msg, 'pipeline')
-
-
-def is_issue_event(msg):
-    return __is_object_kind__(msg, 'issue')
-
-
-def is_merge_request_event(msg):
-    return __is_object_kind__(msg, 'merge_request')
-
-
-def is_note_event(msg):
-    return __is_object_kind__(msg, 'note')
-
-
-def is_push_event(msg):
-    return __is_object_kind__(msg, 'push')
-
-
-def is_tag_event(msg):
-    return __is_object_kind__(msg, 'tag_push')
 
 
 def get_note_content(msg):
