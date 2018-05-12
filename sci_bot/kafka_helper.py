@@ -18,7 +18,7 @@ def get_config():
     return config
 
 
-def get_kafka_producer():
+def producer():
     producer = None
     try:
         producer = confluent_kafka.Producer(**get_config())
@@ -27,7 +27,7 @@ def get_kafka_producer():
     return producer
 
 
-def get_kafka_consumer():
+def consumer():
     consumer = None
     try:
         consumer = confluent_kafka.Consumer(**get_config())
