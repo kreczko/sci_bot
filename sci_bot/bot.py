@@ -10,6 +10,8 @@ from .logger import log
 
 from . import backend_gitlab as gl
 
+BOT_USERNAME = None
+
 
 def parse_config(config_file):
     config = yaml.load(config_file)
@@ -20,10 +22,12 @@ def parse_config(config_file):
 
 
 def listen(config, timeout=5.0):
+    global BOT_USERNAME
     config = parse_config(config)
     topics = config['kafka_topics']
     consumer = get_kafka_consumer()
     tmp_dir = config['tmp_dir']
+    BOT_USERNAME = config['bot_username']
     try:
         consumer.subscribe(topics)
 
@@ -120,11 +124,14 @@ def process_merge_request_event(event):
 
 def process_note_event(event):
     log.debug('Got note event')
+    if not gl.contains_mention(event, BOT_USERNAME):
+        return
+    log.debug('I was mentioned, deciding what to do')
+    gl.reply_to(event, "HAL: \"I'm Afraid I Can't Do That, Dave.\"")
     # TODO: these might include bot commands!
     # process command
     # acknowledge a known command
     # ignore own messages
-    pass
 
 
 def process_push_event(event):

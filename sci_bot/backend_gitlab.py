@@ -1,5 +1,6 @@
 """Wrapper for python-gitlab."""
 import gitlab
+import os
 
 from .helpers import cached
 
@@ -52,7 +53,29 @@ def contains_mention(msg, mention):
         return False
     attr = msg['object_attributes']
     note = attr['note']
-    return mention in note
+    return '@' + mention in note
+
+def reply_to(event, msg):
+    gitlab_token = os.environ['GIT_ACCESS_TOKEN']
+
+    git_ssh_url = event['project']['git_ssh_url']
+    url=url[url.find('@')+1:url.find(':')]
+    url = 'https://{}'.format(url)
+
+    c = connect(url, gitlab_token)
+
+    project_id = event['project_id']
+    issue_id = event['issue']['iid']
+
+    project = c.projects.get(project_id)
+    # get issue from project, direct access (c.issues.get) does not provide
+    # access to notes
+    issue = project.issues.get(issue_id)
+
+    issue.notes.create(dict(
+        body=msg,
+    ))
+    issue.save()
 
 
 def is_build_event(msg):
