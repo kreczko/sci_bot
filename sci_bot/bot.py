@@ -5,55 +5,160 @@ import confluent_kafka
 import json
 import yaml
 
-from .kafka_helper import get_kafka_consumer
+import .kafka_helper as Kafka
 from .logger import log
 
 from . import backend_gitlab as gl
-
-BOT_USERNAME = None
-
-
-def parse_config(config_file):
-    config = yaml.load(config_file)
-    log.debug(config)
-    # TODO: add some checks
-    # e.g. does the API token work?
-    return config
+from .backend import EventType
 
 
-def listen(config, timeout=5.0):
-    global BOT_USERNAME
-    config = parse_config(config)
-    topics = config['kafka_topics']
-    consumer = get_kafka_consumer()
-    tmp_dir = config['tmp_dir']
-    BOT_USERNAME = config['bot_username']
-    try:
-        consumer.subscribe(topics)
+class Bot(object):
+
+
+    def __init__(self, config, timeout=5.0):
+        self.config = config
+        self.connection = self._establish_connection()
+        self.msg_queue = Kafka.consumer()
+        self.topics = config['kafka_topics']
+        self.timeout = timeout
+        self.name = config['bot_username']
+        self.tmp_dir = config.get('tmp_dir', '/tmp')
+
+    def _establish_connection(self):
+        repo_type = self.config['repo_type']
+        if repo_type.lower() == 'gitlab':
+            return gl.Gitlab(self.config['repo'], self.config['API_TOKEN'])
+        else:
+            raise ValueError('Unknown repo type "{}"'.format(repo_type))
+
+    def run(self):
+        try:
+            self._listen()
+        except KeyboardInterrupt:
+            log.info('%% Aborted by user\n')
+        finally:
+            # Close down message queue to commit final offsets.
+            self.msg_queue.close()
+
+    def _listen(self):
+        self.msg_queue.subscribe(self.topics)
 
         while True:
-            msg = consumer.poll(timeout=timeout)
+            msg = self.msg_queue.poll(timeout=self.timeout)
             if msg is None:
                 log.debug("No messages found.")
                 continue
             if msg.error():
-                process_error_msg(msg)
+                _process_error_msg(msg)
             else:
-                process_msg(msg, tmp_dir)
-                consumer.commit(async=False)
-    except KeyboardInterrupt:
-        log.info('%% Aborted by user\n')
-    finally:
-        # Close down consumer to commit final offsets.
-        consumer.close()
+                _process_msg(msg)
+                self.msg_queue.commit(async=False)
+
+    def _process_msg(self, msg):
+        event = gl.Event.from_string(msg.value())
+        store_event(event, self.tmp_dir)
+
+        event_type = event.type
+        action_map = {
+            EventType.BUILD: self._process_build_event,
+            EventType.CI: self._process_ci_event,
+            EventType.ISSUE: self._process_issue_event,
+            EventType.MERGE_REQUEST: self._process_merge_request_event,
+            EventType.NOTE: self._process_note_event,
+            EventType.PUSH: self._process_push_event,
+            EventType.TAG: self._process_tag_event,
+            EventType.UNKNOWN: self._process_unknown_event,
+        }
+        if event_type in action_map:
+            action_map[event_type](event)
+        else:
+            self._process_unknown_event(event)
+
+        return 0
+
+    def _process_build_event(self, event):
+        log.debug('Got build event')
+        # TODO: when a build finishes, download metrics and output files
+        # files need to be specified in config repo
+        # if it is a one-off build, check what is next in line
+        pass
 
 
-def forward():
-    config = parse_config(config)
+    def _process_ci_event(self, event):
+        log.debug('Got CI event')
+        # TODO: when a pipeline/workflow finishes, create report
+        pass
+
+
+    def _process_issue_event(self, event):
+        log.debug('Got issues event')
+        # not interesting at the moment, but might in the future
+        # TODO: notify people responsible for changed files/new files in specific
+        # folders
+        pass
+
+
+    def _process_merge_request_event(self, event):
+        log.debug('Got merge request event')
+        # TODO:
+        # 1. notify people responsible for changed files/new files in specific
+        # folders & add labels (e.g. "not-tested", 'not-validated')
+        # 2. Check if MR includes all the necessary information (e.g. links to an issue)
+        # 3. start simple checks if not done automatically (e.g. only config/CI repo
+        # needs runner, all other repos don't)
+        # 4. if all successful, change label "not-tested" -> "tests-succeeded" or
+        # "tests-failed" on failure
+        pass
+
+
+    def _process_note_event(self, event):
+        log.debug('Got note event')
+        if not self.connection.contains_mention(event, self.name):
+            log.debug('Note not for me :(')
+            return
+        log.debug('I was mentioned, deciding what to do')
+        self.connection.reply_to(event, "HAL: \"I'm Afraid I Can't Do That, Dave.\"")
+        # TODO: these might include bot commands!
+        # process command
+        # acknowledge a known command
+        # ignore own messages
+
+
+    def _process_push_event(self, event):
+        log.debug('Got push event')
+        # not interesting at the moment, but might be used later
+        # TODO: to be seen
+        pass
+
+
+    def _process_tag_event(self, event):
+        log.debug('Got tag event')
+        # TODO: start release validation and deploy?
+        pass
+
+
+    def _process_unknown_event(self, event):
+        log.debug('Got unknown event')
+        pass
+
+    @staticmethod
+    def from_yaml(config_file):
+        config = yaml.load(config_file)
+        log.debug(config)
+        return Bot(config)
+
+
+
+def listen(config, timeout=5.0):
+    bot = Bot(config, timeout)
+    bot.run()
+
+
+def forward(config):
     pass
 
 
-def process_error_msg(msg):
+def _process_error_msg(msg):
     if msg.error().code() == confluent_kafka.KafkaError._PARTITION_EOF:
         # End of partition event
         log.error('%% {} [{}] reached end at offset {}\n'.format
@@ -62,101 +167,10 @@ def process_error_msg(msg):
         raise confluent_kafka.KafkaException(msg.error())
 
 
-def process_msg(msg, tmp_dir='/tmp'):
-    value = msg.value()
-    value = json.loads(value)
-    store_msg(value, tmp_dir)
-
-    if gl.is_build_event(value):
-        process_build_event(value)
-    elif gl.is_ci_event(value):
-        process_ci_event(value)
-    elif gl.is_issue_event(value):
-        process_issue_event(value)
-    elif gl.is_merge_request_event(value):
-        process_merge_request_event(value)
-    elif gl.is_note_event(value):
-        process_note_event(value)
-    elif gl.is_push_event(value):
-        process_push_event(value)
-    elif gl.is_tag_event(value):
-        process_tag_event(value)
-    else:
-        process_unknown_event(value)
-
-    return 0
-
-
-def process_build_event(event):
-    log.debug('Got build event')
-    # TODO: when a build finishes, download metrics and output files
-    # files need to be specified in config repo
-    # if it is a one-off build, check what is next in line
-    pass
-
-
-def process_ci_event(event):
-    log.debug('Got CI event')
-    # TODO: when a pipeline/workflow finishes, create report
-    pass
-
-
-def process_issue_event(event):
-    log.debug('Got issues event')
-    # not interesting at the moment, but might in the future
-    # TODO: notify people responsible for changed files/new files in specific
-    # folders
-    pass
-
-
-def process_merge_request_event(event):
-    log.debug('Got merge request event')
-    # TODO:
-    # 1. notify people responsible for changed files/new files in specific
-    # folders & add labels (e.g. "not-tested", 'not-validated')
-    # 2. Check if MR includes all the necessary information (e.g. links to an issue)
-    # 3. start simple checks if not done automatically (e.g. only config/CI repo
-    # needs runner, all other repos don't)
-    # 4. if all successful, change label "not-tested" -> "tests-succeeded" or
-    # "tests-failed" on failure
-    pass
-
-
-def process_note_event(event):
-    log.debug('Got note event')
-    if not gl.contains_mention(event, BOT_USERNAME):
-        return
-    log.debug('I was mentioned, deciding what to do')
-    gl.reply_to(event, "HAL: \"I'm Afraid I Can't Do That, Dave.\"")
-    # TODO: these might include bot commands!
-    # process command
-    # acknowledge a known command
-    # ignore own messages
-
-
-def process_push_event(event):
-    log.debug('Got push event')
-    # not interesting at the moment, but might be used later
-    # TODO: to be seen
-    pass
-
-
-def process_tag_event(event):
-    log.debug('Got tag event')
-    # TODO: start release validation and deploy?
-    pass
-
-
-def process_unknown_event(event):
-    log.debug('Got unknown event')
-    pass
-
-
-def store_msg(msg, tmp_dir):
-    event_type = gl.get_event_type(msg)
+def store_event(event, tmp_dir):
+    event_type = event.type
     path = join(tmp_dir, 'data', f'ci_bot_msg_{event_type}_random_hash.json')
-    with open(path, 'w') as f:
-        json.dump(msg, f, indent=2)
+    event.to_json(path)
 
 
 def get_config_repo(repo, auth_token):
