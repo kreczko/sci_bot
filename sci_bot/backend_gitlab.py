@@ -23,9 +23,19 @@ class Gitlab(object):
     def __init__(self, repo, auth_token):
         self.repo = repo
         self.auth_token = auth_token
-        self.connection = __connect(repo, auth_token)
+        self.connection = _connect(repo, auth_token)
 
-    def reply_to_issue(self, issue, msg):
+    def reply_to_issue(self, event, msg):
+        project_id = event['project_id']
+        issue_iid = event['issue']['iid']
+
+        project = self.connection.projects.get(project_id)
+        # get issue from project, direct access (c.issues.get) does not provide
+        # access to notes
+        issue = project.issues.get(issue_iid)
+        self._reply_to_issue(issue, msg)
+
+    def _reply_to_issue(self, issue, msg):
         try:
             issue.notes.create(dict(
                 body=msg,
@@ -34,6 +44,9 @@ class Gitlab(object):
         except Exception as e:
             log.error('Unable to reply to issue {}: {}'.format(
                 issue.get_id(), e))
+
+    def contains_mention(self, event, name):
+        return _contains_mention(event._content, name)
 
 
 class Event(object):
@@ -58,6 +71,9 @@ class Event(object):
         with open(output_file, 'w') as f:
             json.dump(self._content, f, indent=2)
 
+    def __getitem__(self, key):
+        return self._content[key]
+
     @staticmethod
     def from_string(input_string):
         content = json.loads(input_string)
@@ -69,7 +85,7 @@ def get_list_of_projects(connection, get_all=True):
     return connection.projects.list(all=get_all)
 
 
-def __connect(repo, auth_token):
+def _connect(repo, auth_token):
     connection = gitlab.Gitlab(repo, auth_token, api_version=4)
     connection.auth()
     return connection
@@ -100,7 +116,7 @@ def __is_object_kind__(msg, kind):
     return 'object_kind' in msg and msg['object_kind'] == kind
 
 
-def contains_mention(msg, mention):
+def _contains_mention(msg, mention):
     if 'object_attributes' not in msg:
         return False
     attr = msg['object_attributes']

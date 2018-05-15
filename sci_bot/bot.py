@@ -5,7 +5,7 @@ import confluent_kafka
 import json
 import yaml
 
-import .kafka_helper as Kafka
+import sci_bot.kafka_helper as Kafka
 from .logger import log
 
 from . import backend_gitlab as gl
@@ -51,7 +51,7 @@ class Bot(object):
             if msg.error():
                 _process_error_msg(msg)
             else:
-                _process_msg(msg)
+                self._process_msg(msg)
                 self.msg_queue.commit(async=False)
 
     def _process_msg(self, msg):
@@ -117,7 +117,7 @@ class Bot(object):
             log.debug('Note not for me :(')
             return
         log.debug('I was mentioned, deciding what to do')
-        self.connection.reply_to(event, "HAL: \"I'm Afraid I Can't Do That, Dave.\"")
+        self.connection.reply_to_issue(event, "HAL: \"I'm Afraid I Can't Do That, Dave.\"")
         # TODO: these might include bot commands!
         # process command
         # acknowledge a known command
@@ -142,15 +142,14 @@ class Bot(object):
         pass
 
     @staticmethod
-    def from_yaml(config_file):
+    def from_yaml(config_file, timeout=5.0):
         config = yaml.load(config_file)
-        log.debug(config)
-        return Bot(config)
+        return Bot(config, timeout)
 
 
 
 def listen(config, timeout=5.0):
-    bot = Bot(config, timeout)
+    bot = Bot.from_yaml(config, timeout)
     bot.run()
 
 
