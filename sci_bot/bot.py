@@ -112,7 +112,8 @@ class Bot(object):
 
 
     def _process_note_event(self, event):
-        log.debug('Got note event')
+        updated_at = event['object_attributes']['updated_at']
+        log.debug('Got note event ({})'.format(updated_at))
         if not self.connection.contains_mention(event, self.name):
             log.debug('Note not for me :(')
             return
@@ -160,7 +161,7 @@ def forward(config):
 def _process_error_msg(msg):
     if msg.error().code() == confluent_kafka.KafkaError._PARTITION_EOF:
         # End of partition event
-        log.error('%% {} [{}] reached end at offset {}\n'.format
+        log.warn('%% {} [{}] reached end at offset {}\n'.format
                   (msg.topic(), msg.partition(), msg.offset()))
     elif msg.error():
         raise confluent_kafka.KafkaException(msg.error())
