@@ -74,6 +74,9 @@ class Event(object):
     def __getitem__(self, key):
         return self._content[key]
 
+    def updated_at(self):
+        return self._content['object_attributes']['updated_at']
+
     @staticmethod
     def from_string(input_string):
         content = json.loads(input_string)

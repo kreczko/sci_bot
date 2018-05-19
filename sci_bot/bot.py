@@ -112,7 +112,7 @@ class Bot(object):
 
 
     def _process_note_event(self, event):
-        updated_at = event['object_attributes']['updated_at']
+        updated_at = event.updated_at()
         log.debug('Got note event ({})'.format(updated_at))
         if not self.connection.contains_mention(event, self.name):
             log.debug('Note not for me :(')
